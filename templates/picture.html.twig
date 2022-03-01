@@ -1,0 +1,7 @@
+{% if image is iterable %}
+    {% set imageName = image|first.name %}
+{% else %}
+    {% set imageName = image %}
+{% endif %}
+
+{{ picture(imageName, alt|default(null), title|default(null), preset|default(null), loading|default(null), ratio|default(null), breakpoints|default(null), maxWidth|default(null), class|default(null))|raw }}
