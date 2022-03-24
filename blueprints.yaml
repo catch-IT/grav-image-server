@@ -1,15 +1,20 @@
 name: Image server (Responsive images)
-version: 1.0.0~alpha1
+version: 1.0.0~alpha2
 description: "Adds responsive images with breakpoints, density (retina), lazy-loading and webp support. Additionally configure sets for editor including image ratios."
 icon: object-group
 author:
   name: Xaver Maierhofer | catchIT GmbH
   company: catchIT GmbH
-demo: https://image-server.grav.catchit.xyz/
+  url: https://catchit.xyz
 homepage: https://github.com/catch-IT/grav-image-server/
+docs: https://docs.catchit.xyz/grav-plugins/image-server/settings/
+demo: https://image-server.grav.catchit.xyz/
 keywords: plugin, image, retina, responsive, webp, twig, helper
 bugs: https://github.com/catch-IT/grav-image-server/issues
 license: MIT
+
+dependencies:
+  - { name: grav, version: '>=1.7.32' }
 
 form:
   validation: strict
@@ -19,7 +24,7 @@ form:
       fields:
         config_tab:
           type: tab
-          title: Basic
+          title: Base settings
 
           fields:
             enabled:
@@ -33,117 +38,271 @@ form:
               validate:
                 type: bool
 
-            class:
-              type: input
-              label: Standard class
-              help: Most frameworks use a standard responsive class like `img-fluid`
-              size: medium
-              default:
-              validate:
-                type: text
+            fieldset.base:
+              type: fieldset
+              title: General
+              collapsible: false
+              fields:
+                enabledMarkdown:
+                  type: toggle
+                  label: Replace images in markdown
+                  help: You could use the plugin only in
+                  highlight: 1
+                  default: 1
+                  options:
+                    1: yes
+                    0: no
+                  validate:
+                    type: bool
 
-            density:
-              type: toggle
-              label: Max denisty (depending on image size)
-              help: This is often mentioned as retina images
-              highlight: 2
-              default: 2
-              options:
-                1: 1x
-                2: 2x
-                3: 3x
-              validate:
-                type: integer
+                removeWrapper:
+                  type: toggle
+                  label: Remove <code>p</code> wrapper
+                  help: Image is no sentence and causes often stange effects
+                  highlight: 1
+                  default: 1
+                  options:
+                    1: yes
+                    0: no
+                  validate:
+                    type: bool
 
-            quality.2x:
-              type: number
-              size: x-small
-              append: "% Quality"
-              label: "Quality 2x density"
-              default: 65
-              validate:
-                type: number
-                step: 1
-                min: 1
-                max: 100
-              help: "Quality of 2x image - Default: 65"
+                svg:
+                  type: toggle
+                  label: SVG - set class, lazy and with/height
+                  help: Get consistent output for all images on the page
+                  highlight: 1
+                  default: 1
+                  options:
+                    1: yes
+                    0: no
+                  validate:
+                    type: bool
 
-            quality.3x:
-                type: number
-                size: x-small
-                append: "% Quality"
-                label: "Quality 3x density"
-                default: 60
-                validate:
+                filterFolder:
+                  type: toggle
+                  label: Filter generated <code>images</code> and <code>themes</code> for Markdown
+                  help: Those can cause side-effects in nesting
+                  highlight: 1
+                  default: 1
+                  options:
+                    1: yes
+                    0: no
+                  validate:
+                    type: bool
+
+                loading:
+                  type: toggle
+                  label: Lazy loading images
+                  help: Uses the HTML attribute
+                  highlight: lazy
+                  default: lazy
+                  options:
+                    eager: eager
+                    lazy: lazy
+                    auto: auto
+                  validate:
+                    type: text
+
+                class:
+                  type: input
+                  label: Standard class
+                  help: Most frameworks use a standard responsive class like `img-fluid`
+                  size: medium
+                  default:
+                  validate:
+                    type: text
+
+
+            fieldset.log:
+              type: fieldset
+              title: Log
+              collapsible: false
+              fields:
+                log:
+                  type: toggle
+                  label: Log missing images to grav log as notice
+                  help:
+                  highlight: 1
+                  default: 1
+                  options:
+                    1: yes
+                    0: no
+                  validate:
+                    type: bool
+                errorImage:
+                  type: toggle
+                  label: Show error image
+                  help:
+                  highlight: 0
+                  default: 0
+                  options:
+                    1: yes
+                    0: no
+                  validate:
+                    type: bool
+
+            fieldset.density:
+              type: fieldset
+              title: Density & Quality
+              collapsible: false
+              fields:
+                help:
+                  type: display
+                  markdown: true
+                  content: All density's multiplied by (breakpoints + 1) + 1 fallback <h4>[Documentation with examples and recommended values](https://docs.catchit.xyz/grav-plugins/image-server/settings/)</h4>
+                densitySet:
+                  type: list
+                  label: Density/Quality
+                  help: This is often mentioned as retina images
+                  default:
+                    - density: 1
+                      quality: 82
+                    - density: 1.5
+                      quality: 70
+                    - density: 2
+                      quality: 65
+                    - density: 3
+                      quality: 60
+                    - density: 4
+                      quality: 50
+                  fields:
+                    .density:
+                      type: number
+                      size: x-small
+                      style: 'text-align: right'
+                      label: Density's generated
+                      help: Looks into documentation viewport from smartphones and real resolution
+                      append: "x"
+                      default: 1
+                      validate:
+                        type: number
+                        step: 0.5
+                        min: 1
+                    .quality:
+                      type: number
+                      size: x-small
+                      style: 'text-align: right'
+                      label: Quality for set density
+                      append: '% Quality'
+                      default: 65
+                      validate:
+                        type: number
+                        step: 1
+                        min: 1
+                        max: 100
+
+            fieldset:
+              type: fieldset
+              title: Breakpoint to image width
+              collapsible: false
+              fields:
+                breakpoints:
+                  type: list
+                  label: Breakpoint/image width
+                  help: Often the values are 1:1 or remove 15px per site intend so 480px page is 450px image.
+                  default:
+                    - breakpoint: 768
+                      imageWidth: 768
+                    - breakpoint: 480
+                      imageWidth: 480
+                  fields:
+                    .breakpoint:
+                      type: number
+                      size: x-small
+                      style: 'text-align: right'
+                      label: Breakpoint
+                      append: px
+                      validate:
+                        type: number
+                        step: 1
+                        min: 1
+                    .imageWidth:
+                      type: number
+                      size: x-small
+                      style: 'text-align: right'
+                      label: Image width
+                      append: px
+                      validate:
+                        type: number
+                        step: 1
+                        min: 1
+                maxWidth:
                   type: number
-                  step: 1
-                  min: 1
-                  max: 100
-                help: "Quality of 3x image - Default: 60"
+                  size: x-small
+                  style: 'text-align: right'
+                  label: Max page/image width
+                  help: Most images are not defined 100% page with e.g. 4k or 8k screens
+                  append: px
+                  default: 1280
+                  validate:
+                    type: number
+                    step: 1
+                    min: 360
 
-            breakpoints:
-              type: array
-              label: Breakpoints (in px)
-              help: Normally the values are 1:1 or remove 15px per site indend so 360px page is 330px image. Intersting in page 50/50 grid or something like that
-              default:
-                768: '768'
-                480: '480'
-              placeholder_key: Image width
-              placeholder_value: Page width
-
-            maxPageWidth:
-              type: number
-              size: x-small
-              label: Max Page/image width
-              help: Most images are not defined 100% page with e.g. 4k or 8k screens
-              append: "px"
-              default: 1280
-              validate:
-                type: number
-                step: 1
-                min: 360
-
-            loading:
-              type: toggle
-              label: Lazy loading images
-              help: Uses the HTML attribute
-              highlight: lazy
-              default: lazy
-              options:
-                eager: eager
-                lazy: lazy
-                auto: auto
-              validate:
-                type: text
 
         advanced_tab:
           type: tab
-          title: Advanced sets
+          title: Configure presets
 
           fields:
             sets:
               name: sets
               type: list
-              label: Config sets
-              help: Allows diffrerent image with with breakpoints overwrite the normal setting. e.g. 25/25/50 grid and 50/50-100 on mobile
+              label: Presets
+              help: Allows different image with with breakpoints overwrite the normal setting. e.g. 25/25/50 grid and 50/50-100 on mobile
               fields:
                 .key:
                   type: key
                   label: Preset name
                   help: Name the preset used as parameter
                   placeholder: e.g. 50p or header-image
-
+                .breakpointsInherited:
+                  type: toggle
+                  label: Breakpoints inherited
+                  highlight: 1
+                  default: 1
+                  options:
+                    1: yes
+                    0: no
+                  validate:
+                    type: bool
                 .breakpoints:
-                  type: array
-                  label: Breakpoints (in px) (optional)
-                  help: Normally the values are 1:1 or remove 15px per site indend so 360px page is 330px image. Intersting in page 50/50 grid or something like that
-                  placeholder_key: Image width
-                  placeholder_value: Page width
+                  type: list
+                  label: Breakpoints (optional - inherited)
+                  help: Normally the values are 1:1 or remove 15px per site intend so 360px page is 330px image. Interesting in page 50/50 grid or something like that
+                  default:
+                    - breakpoint: 768
+                      imageWidth: 768
+                    - breakpoint: 480
+                      imageWidth: 480
+                  fields:
+                    .breakpoint:
+                      type: number
+                      size: x-small
+                      style: 'text-align: right'
+                      label: Breakpoint
+                      append: px
+                      validate:
+                        type: number
+                        step: 1
+                        min: 1
+                    .imageWidth:
+                      type: number
+                      size: x-small
+                      style: 'text-align: right'
+                      label: Image width
+                      append: px
+                      validate:
+                        type: number
+                        step: 1
+                        min: 1
 
                 .maxWidth:
                   type: number
-                  size: medium
-                  label: Max image width (optional)
+                  size: small
+                  style: 'text-align: right'
+                  label: Max image width (optional - inherited)
                   help: Most images are not defined 100% page with e.g. 4k or 8k screens
                   append: "px"
                   placeholder: inherit
@@ -153,17 +312,18 @@ form:
 
                 .ratio:
                   type: number
-                  label: Ratio (optional)
+                  size: small
+                  style: 'text-align: right'
+                  label: Ratio (optional - keep original)
                   append: "%"
-                  help: < 1 is wider image, > 1 is higher image
-                  size: medium
+                  help: < 1 is horizontal image, > 1 is vertical image
                   validate:
                     type: number
                     step: 0.00001
 
                 .loading:
                   type: toggle
-                  label: Lazy loading images (optional)
+                  label: Lazy loading images (optional - inherited)
                   help: Uses the HTML attribute
                   options:
                     unset: inherit
@@ -175,9 +335,38 @@ form:
 
                 .class:
                   type: input
-                  label: Standard class (optional)
+                  label: Standard class (optional - inherited)
                   help: Most frameworks usw a standard responsive class like `img-fluid`
                   size: medium
                   placeholder: inherit
                   validate:
                     type: text
+
+                .densitySet:
+                  type: list
+                  label: Density set (optional - inherited - not recommended on presets)
+                  help: Useful in some cases like low quality header background object-fit images
+                  default:
+                  fields:
+                    .density:
+                      type: number
+                      label: Density's generated
+                      append: "x"
+                      help: Looks into documentation viewport from smartphones and real resolution
+                      size: x-small
+                      default: 1
+                      validate:
+                        type: number
+                        step: 0.5
+                        min: 1
+                    .quality:
+                      type: number
+                      size: x-small
+                      append: "% Quality"
+                      label: "Quality for this density"
+                      default: 65
+                      validate:
+                        type: number
+                        step: 1
+                        min: 1
+                        max: 100
